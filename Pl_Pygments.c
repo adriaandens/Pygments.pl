@@ -29,10 +29,36 @@ PyObject* create_lexer(SV* lexer_options) {
 	}
 	return lexer;
 }
-PyObject* create_formatter(SV* formatter) {}
+PyObject* create_formatter(SV* formatter_options) {
+	PyObject* formatter;
+	if(SvTYPE(formatter_options) == SVt_PV) { /** We got a simple string **/
+		PyObject* ftn_get_formatter_by_name = get_function_object(pyg_mod_formatters, "get_formatter_by_name");
+		formatter = PyObject_CallFunction(ftn_get_formatter_by_name, "s", SvPV_nolen(formatter_options));
+	} else { /** We got a hash **/
+		PyObject* options = PyDict_New();
+		char* formatter_type = SvPV_nolen(HeVAL(hv_fetch_ent(formatter_options, newSVpvs("type"), NULL, 0)));
+		AV* keys = SvRV(get_list_of_keys(formatter_options));
 
-/** Return zero if it's not a good hash, return 1 if it is **/
+		int i;
+		for(i = 0; i < av_len(keys); i++) {
+			SV** valptr = av_fetch(keys, i, 0); 
+			char* key_name = SvPV_nolen(*valptr);
+			if(strcmp(key_name, "type") != 0) {
+				PyDict_SetItemString(options, key_name, SvREFCNT_inc(HeVAL(hv_fetch_ent(formatter_options, newSVpvs(key_name), NULL, 0))));
+			}
+		}
+
+		/** Call function, get lexer by name with dict **/
+		PyObject* args = Py_BuildValue("s", formatter_type);
+		formatter = PyObject_Call(ftn_get_formatter_by_name, args, options);
+	}
+	return formatter;
+}
+
+/** Return zero if it's not a good hash, return 1 if it is and there is no outfile, return 2 if it's also a valid hash and there's an outfile **/
 int check_arguments(HV* options) {
+	int return_code = 1;
+
 	/** Check if code, lexer and formatter keys exists **/
 	if((int) hv_exists_ent(options, newSVpvs("code"), 0) == 0 ||
 	   (int) hv_exists_ent(options, newSVpvs("lexer"), 0) == 0 ||
@@ -67,9 +93,11 @@ int check_arguments(HV* options) {
 		if(SvTYPE(outfile) != SVt_PV &&
 		 !(SvTYPE(outfile) == SVt_RV && SvTYPE(SvRV(outfile)) == SVt_PV)) {
 			    return 0;
+		} else {
+			return_code = 2;
 		}
 	}
 
 	/** Everything OK! **/
-	return 1;
+	return return_code;
 }
