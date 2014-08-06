@@ -1,7 +1,35 @@
 #include "Pl_Pygments.h"
+#include "Py_Helper_ftns.h"
+#include "Py_Pygments.h"
 
-PyObject* create_lexer(HV* lexer) {}
-PyObject* create_formatter(HV* formatter) {}
+extern PyObject *pyg_mod_pygments, *pyg_mod_formatters, *pyg_mod_lexers, *pyg_mod_styles; /** Modules **/
+
+PyObject* create_lexer(SV* lexer_options) {
+	PyObject* lexer;
+	if(SvTYPE(lexer_options) == SVt_PV) { /** We got a simple string **/
+		PyObject* ftn_get_lexer_by_name = get_function_object(pyg_mod_lexers, "get_lexer_by_name");
+		lexer = PyObject_CallFunction(ftn_get_lexer_by_name, "s", SvPV_nolen(lexer_options));
+	} else { /** We got a hash **/
+		PyObject* options = PyDict_New();
+		char* lexer_type = SvPV_nolen(HeVAL(hv_fetch_ent(lexer_options, newSVpvs("type"), NULL, 0)));
+		AV* keys = SvRV(get_list_of_keys(lexer_options));
+
+		int i;
+		for(i = 0; i < av_len(keys); i++) {
+			SV** valptr = av_fetch(keys, i, 0); 
+			char* key_name = SvPV_nolen(*valptr);
+			if(strcmp(key_name, "type") != 0) {
+				PyDict_SetItemString(options, key_name, SvREFCNT_inc(HeVAL(hv_fetch_ent(lexer_options, newSVpvs(key_name), NULL, 0))));
+			}
+		}
+
+		/** Call function, get lexer by name with dict **/
+		PyObject* args = Py_BuildValue("s", lexer_type);
+		lexer = PyObject_Call(ftn_get_lexer_by_name, args, options);
+	}
+	return lexer;
+}
+PyObject* create_formatter(SV* formatter) {}
 
 /** Return zero if it's not a good hash, return 1 if it is **/
 int check_arguments(HV* options) {
