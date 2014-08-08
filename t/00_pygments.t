@@ -19,7 +19,7 @@ use Text::Pygments;
 		code => 'print "Hello World!";',
 		lexer => 'perl',
 		formatter => 'html',
-		outfile => 'formatted_code.code'
+		outfile => $ENV{PWD} . '/formatted_code.code'
 	});
 	print STDERR "\n---Formatted code----\n";
 	print STDERR $formatted_code;

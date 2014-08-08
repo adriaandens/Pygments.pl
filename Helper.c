@@ -56,7 +56,7 @@ PyObject* create_py_dict(int number_of_pairs, ...) {
 
 	va_start(ag, number_of_pairs);
 	for(i = 0; i < number_of_pairs*2; i = i+2) {
-		PyObject* key = va_arg(ag, PyObject*);
+		char* key = va_arg(ag, char*);
 		PyObject* val = va_arg(ag, PyObject*);
 		if(strcmp("true", PyBytes_AsString(val)) == 0)
 			val = Py_True;
@@ -65,9 +65,18 @@ PyObject* create_py_dict(int number_of_pairs, ...) {
 		else if(strcmp("none", PyBytes_AsString(val)) == 0)
 			val = Py_None;
 
-		PyDict_SetItem(dict, key, val);
+		int success = PyDict_SetItemString(dict, key, val);
+		if(success == 0) {
+			logger("Successfully added "); logger(key);logger(" to dict.\n"); 
+		} else if(success == -1) {
+			logger("Failed to add ");logger(key);logger(" to dict.\n");
+		}
 	}
 	va_end(ag);
 
 	return dict;
+}
+
+PyObject* create_py_filehandle(char* string, char* mode) {
+	return PyFile_FromString(string, mode);
 }
