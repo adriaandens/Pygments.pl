@@ -1,5 +1,14 @@
-#include "Pl_Helper_ftns.h"
+#include "Helper.h"
 #include "Logger.h"
+
+SV* create_pl_string_from_py_string(PyObject* py_string) {
+	char* str = PyBytes_AsString(py_string);
+	return SvREFCNT_inc(newSVpvn(str, strlen(str)));
+}
+
+PyObject* get_function_object(PyObject* module, char* function_name) {
+	return PyObject_GetAttrString(module, function_name);
+}
 
 PyObject* create_py_string_from_pl_string(SV* str) {
 	logger("Perl string -> Py String: ");
@@ -19,4 +28,8 @@ AV* get_list_of_keys(HV* hash) {
 		av_push(keys, newSVpv(key, klen));
 
 	return keys;
+}
+
+PyObject* get_function_from_module(PyObject* module, char* function_name) {
+	return PyObject_GetAttrString(module, function_name);
 }

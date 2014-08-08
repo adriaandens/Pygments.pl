@@ -1,11 +1,9 @@
 #include "EXCESS.h"
-#include "Pl_Helper_ftns.h"
-#include "Py_Helper_ftns.h"
-#include "Py_Pygments.h"
-#include "Pl_Pygments.h"
+#include "Pygments.h"
+#include "Helper.h"
 #include "Logger.h"
 
-/**extern PyObject *pyg_mod_pygments, *pyg_mod_formatters, *pyg_mod_lexers, *pyg_mod_styles;**/
+extern PyObject *pyg_mod_pygments, *pyg_mod_formatters, *pyg_mod_lexers, *pyg_mod_styles;
 
 MODULE = Text::Pygments		PACKAGE = Text::Pygments
 
