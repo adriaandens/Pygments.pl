@@ -33,25 +33,18 @@ SV* highlight(HV* options)
 		lexer = create_lexer(value_from_hash(options, "lexer"));
 		formatter = create_formatter(value_from_hash(options, "formatter"));
 		if(valid_arguments == 2)
-			outfile = create_py_filehandle(SvPV_nolen(value_from_hash(options, "outfile")), "w");
+			outfile = create_py_string_from_pl_string(value_from_hash(options, "outfile"));
 
 		/** Call highlight() in Python **/
 		PyObject* pyg_ftn_highlight = PyObject_GetAttrString(pyg_mod_pygments, "highlight");
-		PyObject* py_formatted_code;
+		PyObject* py_formatted_code = PyObject_CallFunctionObjArgs(pyg_ftn_highlight, code, lexer, formatter, NULL);
 		if(valid_arguments == 2) {
-			PyObject* args = create_py_tuple(3, code, lexer, formatter);
-			PyObject* dict = create_py_dict(1, "outfile", outfile);
-			if(args == NULL)
-				logger("Args is NULL.\n");
-			if(dict == NULL)
-				logger("Dict is NULL.\n");
-			logger("Created tuple and dictionary for the call.\n");
-			PyFile_IncUseCount(outfile);
-			PyObject_Call(pyg_ftn_highlight, args, dict);
-			PyFile_DecUseCount(outfile);
+			FILE* fp;
+			fp = fopen(PyBytes_AsString(outfile), "w");
+			fprintf(fp, "%s", PyBytes_AsString(py_formatted_code));
+			fclose(fp);
 			RETVAL = newSViv(1);
 		} else {
-			py_formatted_code = PyObject_CallFunctionObjArgs(pyg_ftn_highlight, code, lexer, formatter, NULL);
 			SV* pl_formatted_code = create_pl_string_from_py_string(py_formatted_code);
 			RETVAL = pl_formatted_code;
 		}	
