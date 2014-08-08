@@ -33,3 +33,41 @@ AV* get_list_of_keys(HV* hash) {
 PyObject* get_function_from_module(PyObject* module, char* function_name) {
 	return PyObject_GetAttrString(module, function_name);
 }
+
+PyObject* create_py_tuple(int number_of_args, ...) {
+	va_list ap;
+	PyObject* tuple = PyTuple_New(number_of_args);
+
+	/** Iterate through list and add to tuple **/
+	va_start(ap, number_of_args);
+	int i;
+	for(i = 0; i < number_of_args; i++) {
+		PyTuple_SetItem(tuple, i, va_arg(ap, PyObject*));
+	}
+	va_end(ap);
+
+	return tuple;
+}
+
+PyObject* create_py_dict(int number_of_pairs, ...) {
+	PyObject* dict = PyDict_New();
+	va_list ag;
+	int i;
+
+	va_start(ag, number_of_pairs);
+	for(i = 0; i < number_of_pairs*2; i = i+2) {
+		PyObject* key = va_arg(ag, PyObject*);
+		PyObject* val = va_arg(ag, PyObject*);
+		if(strcmp("true", PyBytes_AsString(val)) == 0)
+			val = Py_True;
+		else if(strcmp("false", PyBytes_AsString(val)) == 0)
+			val = Py_False;
+		else if(strcmp("none", PyBytes_AsString(val)) == 0)
+			val = Py_None;
+
+		PyDict_SetItem(dict, key, val);
+	}
+	va_end(ag);
+
+	return dict;
+}
