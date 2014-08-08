@@ -4,7 +4,15 @@ README.md
 
 EXCESS.h
 ppport.h
-Pygments.xs
+Text_Pygments.xs
+
+Helper.h
+Pygments.h
+Logger.h
+
+Helper.c
+Pygments.c
+Logger.c
 
 t/00_pygments.t
 

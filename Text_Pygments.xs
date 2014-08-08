@@ -38,16 +38,13 @@ SV* highlight(HV* options)
 		/** Call highlight() in Python **/
 		PyObject* pyg_ftn_highlight = PyObject_GetAttrString(pyg_mod_pygments, "highlight");
 		PyObject* py_formatted_code;
-		if(valid_arguments == 2)
-			py_formatted_code = PyObject_CallFunctionObjArgs(pyg_ftn_highlight, code, lexer, formatter, outfile, NULL);
-		else
+		if(valid_arguments == 2) {
+			PyObject_CallFunctionObjArgs(pyg_ftn_highlight, code, lexer, formatter, outfile, NULL);
+			RETVAL = newSVpvs("OK!");
+		} else {
 			py_formatted_code = PyObject_CallFunctionObjArgs(pyg_ftn_highlight, code, lexer, formatter, NULL);
-			
-
-		/** Convert PyObject to Perl String **/
-		SV* pl_formatted_code = create_pl_string_from_py_string(py_formatted_code);
-
-		/** Return **/
-		RETVAL = pl_formatted_code;
+			SV* pl_formatted_code = create_pl_string_from_py_string(py_formatted_code);
+			RETVAL = pl_formatted_code;
+		}	
 	OUTPUT: RETVAL
 
