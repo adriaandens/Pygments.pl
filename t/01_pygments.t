@@ -74,7 +74,29 @@ use Text::Pygments;
 	my $expected_output = qq{<div class="highlight"><pre><span class="k">print</span> <span class="s">&quot;Hello World!&quot;</span><span class="p">;</span>\n</pre></div>\n};
 	cmp_ok(highlight($hashref), 'eq', $expected_output, q{Bogus key-value pairs don't disturb the flow});
 }
+# Test 6: Code can be a stringref
+{
+	my $string = 'print "Hello World!";';
+	my $hashref = {code => \$string, lexer => 'perl', formatter => 'html'};
+	my $expected_output = qq{<div class="highlight"><pre><span class="k">print</span> <span class="s">&quot;Hello World!&quot;</span><span class="p">;</span>\n</pre></div>\n};
+	cmp_ok(highlight($hashref), 'eq', $expected_output, 'Code can be a stringref');
+}
+# Test 7: Outfile can be a stringref
+{
+	my $string = 'code.pl';
+	my $hashref = {code => 'print "Hello World!";', lexer => 'perl', formatter => 'html', outfile => \$string};
+	my $result = highlight($hashref);
+	cmp_ok($result, '==', 1, 'Outfile can be a stringref');
 
+	# Let's check the contents of the file
+	open(FH, '<', $string);
+	local $/ = undef;
+	my $file_contents = <FH>;
+	close(FH);
 
+	my $expected_output = qq{<div class="highlight"><pre><span class="k">print</span> <span class="s">&quot;Hello World!&quot;</span><span class="p">;</span>\n</pre></div>\n};
+	cmp_ok($file_contents, 'eq', $expected_output, qq{Contents of $string looks good too!});
+	unlink($string);
+}
 
 done_testing();

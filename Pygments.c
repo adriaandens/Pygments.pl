@@ -92,8 +92,7 @@ int check_arguments(HV* options) {
 
 	/** Check code **/
 	SV* code_value = value_from_hash(options, "code");
-	if(SvTYPE(code_value) != SVt_PV && 
-	 !(SvTYPE(code_value) == SVt_RV && SvTYPE(SvRV(code_value)) == SVt_PV)) {
+	if(!SvPOK(code_value) && !(SvROK(code_value) && SvTYPE(SvRV(code_value)) == SVt_PV)) {
 		logger("Code is neither a string, nor a reference to a string.\n");
 		return 0; /** Not a string or a reference to a string **/
 	}	
@@ -116,10 +115,9 @@ int check_arguments(HV* options) {
 	if((int) hv_exists_ent(options, newSVpvs("outfile"), 0) != 0) {
 		logger("There is a key called outfile.\n");
 		SV* outfile = value_from_hash(options, "outfile");
-		if(SvTYPE(outfile) != SVt_PV &&
-		 !(SvTYPE(outfile) == SVt_RV && SvTYPE(SvRV(outfile)) == SVt_PV)) {
-				logger("But the key is not a valid one...\n");
-			    return 0;
+		if(!SvPOK(outfile) && !(SvROK(outfile) && SvTYPE(SvRV(outfile)) == SVt_PV)) {
+			logger("And the key is not a valid one...\n");
+			return 0;
 		} else {
 			logger("The value of outfile is a string or a reference to one.\n");
 			return_code = 2;

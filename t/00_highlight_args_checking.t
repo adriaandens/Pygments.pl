@@ -7,7 +7,10 @@ use Text::Pygments;
 # CRASH TESTS
 
 # Test 1: No Arguments
-ok(!defined(highlight()), 'No arguments returns undef');
+{
+	eval {my $result = highlight()};
+	ok($@, q{Give error when calling highlight without an argument});
+}
 # Test 2: empty hashref
 ok(!defined(highlight({})), 'Empty hashref returns undef');
 # Test 3: hashref with bogus key-value pairs
@@ -26,23 +29,14 @@ ok(!defined(highlight({})), 'Empty hashref returns undef');
 	ok(!defined(highlight($hashref)), 'Formatter has invalid Scalar type, returns undef');
 }
 # Test 6: Code is stringref
-{
-	my $string = 'print "Hello World!";';
-	my $hashref = {code => \$string, lexer => 'perl', formatter => 'html'};
-	ok(!defined(highlight($hashref)), 'Code cannot be a string ref (for now), returns undef');
-}
 # Test 7: Code is not a string
 {
-	my $hashref = {code => 0xdeadbeef, lexer => 'perl', formatter => 'html'};
+	my $hashref = {code => 42, lexer => 'perl', formatter => 'html'};
 	ok(!defined(highlight($hashref)), 'Code cannot be a number, returns undef');
 }
-# Test 8: Repeat test 6 and 7 with outfile
+# Test 8: Repeat test 7 with outfile
 {
-	my $string = 'code.pl';
-	my $hashref = {code => 'print "Hello World!";', lexer => 'perl', formatter => 'html', outfile => \$string};
-	ok(!defined(highlight($hashref)), 'Outfile cannot be a string ref (for now), returns undef');
-
-	$hashref = {code => 'print "Hello World!";', lexer => 'perl', formatter => 'html', outfile => 0xcafec0de};
+	my $hashref = {code => 'print "Hello World!";', lexer => 'perl', formatter => 'html', outfile => 0xcafec0de};
 	ok(!defined(highlight($hashref)), 'Outfile cannot be a number, returns undef');
 }
 # Test 9: Lexer hash does not have "type" key

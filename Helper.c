@@ -11,6 +11,8 @@ PyObject* get_function_object(PyObject* module, char* function_name) {
 }
 
 PyObject* create_py_string_from_pl_string(SV* str) {
+	if(SvROK(str))
+		str = SvRV(str);
 	logger("Perl string -> Py String: ");
 	logger(SvPV_nolen(str)); logger("\n");
 	return Py_BuildValue("s", SvPV_nolen(str));
