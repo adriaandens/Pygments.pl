@@ -107,7 +107,7 @@ int check_arguments(HV* options) {
 
 	/** Check Formatter **/
 	SV* formatter_value = value_from_hash(options, "formatter");
-	if(!SvPOK(formatter_value) && !(SvROK(formatter_value) && SvTYPE(formatter_value) == SVt_PVHV)) {
+	if(!SvPOK(formatter_value) && !(SvROK(formatter_value) && SvTYPE(SvRV(formatter_value)) == SVt_PVHV)) {
 		logger("Formatter is neither a string nor a reference to a hash.\n");
 		return 0;
 	}
