@@ -1,2 +1,5 @@
 *.py
 .DS_STORE
+*.bs
+*.o
+*.so
