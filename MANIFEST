@@ -14,7 +14,8 @@ Helper.c
 Pygments.c
 Logger.c
 
-t/00_pygments.t
+t/00_highlight_args_checking.t
+t/01_pygments.t
 
 lib/Text/Pygments.pm
 lib/Text/Pygments/Formatter.pm
