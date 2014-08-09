@@ -58,12 +58,7 @@ PyObject* create_py_dict(int number_of_pairs, ...) {
 	for(i = 0; i < number_of_pairs*2; i = i+2) {
 		char* key = va_arg(ag, char*);
 		PyObject* val = va_arg(ag, PyObject*);
-		if(strcmp("true", PyBytes_AsString(val)) == 0)
-			val = Py_True;
-		else if(strcmp("false", PyBytes_AsString(val)) == 0)
-			val = Py_False;
-		else if(strcmp("none", PyBytes_AsString(val)) == 0)
-			val = Py_None;
+		val = interpret_py_string(val);
 
 		int success = PyDict_SetItemString(dict, key, val);
 		if(success == 0) {
@@ -79,4 +74,31 @@ PyObject* create_py_dict(int number_of_pairs, ...) {
 
 PyObject* create_py_filehandle(char* string, char* mode) {
 	return PyFile_FromString(string, mode);
+}
+
+PyObject* create_pyobject_from_sv(SV* sv) {
+	PyObject* obj;
+	if(SvTYPE(sv) == SVt_IV) {
+		obj = PyInt_FromSize_t(SvIV(sv));
+	} else if(SvTYPE(sv) == SVt_PV) {
+		obj = Py_BuildValue("s", SvPV_nolen(sv));
+		obj = interpret_py_string(obj);
+	}
+
+	return obj;
+}
+
+PyObject* interpret_py_string(PyObject* string) {
+	if(strcmp("true", PyBytes_AsString(string)) == 0) {
+		logger("Value equals to true\n");
+		string = Py_True;
+	} else if(strcmp("false", PyBytes_AsString(string)) == 0) {
+		string = Py_False;
+		logger("Value equals to false\n");
+	} else if(strcmp("none", PyBytes_AsString(string)) == 0) {
+		string = Py_None;
+		logger("Value equals to none\n");
+	}
+
+	return string;	
 }

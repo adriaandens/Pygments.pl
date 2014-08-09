@@ -24,43 +24,32 @@ int initialize_python_and_pygments_modules() {
 }
 
 PyObject* create_lexer(SV* lexer_options) {
-	logger("create_lexer() says hai!\n");
 	PyObject* lexer;
-	if(pyg_mod_lexers == NULL)
-		logger("create_lexer(): pyg_mod_lexers is NULL.\n");
 	PyObject* ftn_get_lexer_by_name = get_function_object(pyg_mod_lexers, "get_lexer_by_name");
 	if(SvTYPE(lexer_options) == SVt_PV) { /** We got a simple string **/
-		logger("create_lexer(): The lexer is a string.\n");
 		lexer = PyObject_CallFunction(ftn_get_lexer_by_name, "s", SvPV_nolen(lexer_options));
 	} else { /** We got a hash **/
-		logger("create_lexer(): The lexer is a hash reference.\n");
-		HV* lexer_options_hash = (HV*) SvRV(lexer_options);
 		PyObject* options = PyDict_New();
-		char* lexer_type = SvPV_nolen(HeVAL(hv_fetch_ent(lexer_options_hash, newSVpvs("type"), NULL, 0)));
+		HV* lexer_options_hash = (HV*) SvRV(lexer_options);
+		char* lexer_type = SvPV_nolen(value_from_hash(lexer_options_hash, "type"));
 		AV* keys = get_list_of_keys(lexer_options_hash);
 
-		logger("Keys of hash: ");
 		int i;
 		for(i = 0; i < av_len(keys); i++) {
 			SV** valptr = av_fetch(keys, i, 0); 
 			char* key_name = SvPV_nolen(*valptr);
-			logger(key_name);logger(" - ");
 			if(strcmp(key_name, "type") != 0) {
-				PyDict_SetItemString(options, key_name, create_py_string_from_pl_string(value_from_hash(lexer_options_hash, key_name)));
+				PyDict_SetItemString(options, key_name, create_pyobject_from_sv(value_from_hash(lexer_options_hash, key_name)));
 			}
 		}
-		logger("\n");
 
 		/** Call function, get lexer by name with dict **/
-		PyObject* args = Py_BuildValue("s", lexer_type);
+		PyObject* args = create_py_tuple(1, Py_BuildValue("s", lexer_type));
 		lexer = PyObject_Call(ftn_get_lexer_by_name, args, options);
 	}
-	if(lexer)
-		logger("create_lexer(): It created 'a' Python object.\n");
-	else
-		logger("create_lexer(): Aw man, lexer is NULL.\n");
 	return lexer;
 }
+
 PyObject* create_formatter(SV* formatter_options) {
 	PyObject* formatter;
 	PyObject* ftn_get_formatter_by_name = get_function_object(pyg_mod_formatters, "get_formatter_by_name");
@@ -69,7 +58,7 @@ PyObject* create_formatter(SV* formatter_options) {
 	} else { /** We got a hash **/
 		PyObject* options = PyDict_New();
 		HV* formatter_options_hash = (HV*) SvRV(formatter_options);
-		char* formatter_type = SvPV_nolen(HeVAL(hv_fetch_ent(formatter_options_hash, newSVpvs("type"), NULL, 0)));
+		char* formatter_type = SvPV_nolen(value_from_hash(formatter_options_hash, "type"));
 		AV* keys = get_list_of_keys(formatter_options_hash);
 
 		int i;
@@ -77,12 +66,12 @@ PyObject* create_formatter(SV* formatter_options) {
 			SV** valptr = av_fetch(keys, i, 0); 
 			char* key_name = SvPV_nolen(*valptr);
 			if(strcmp(key_name, "type") != 0) {
-				PyDict_SetItemString(options, key_name, create_py_string_from_pl_string(value_from_hash(formatter_options_hash, key_name)));
+				PyDict_SetItemString(options, key_name, create_pyobject_from_sv(value_from_hash(formatter_options_hash, key_name)));
 			}
 		}
 
 		/** Call function, get lexer by name with dict **/
-		PyObject* args = Py_BuildValue("s", formatter_type);
+		PyObject* args = create_py_tuple(1, Py_BuildValue("s", formatter_type));
 		formatter = PyObject_Call(ftn_get_formatter_by_name, args, options);
 	}
 	return formatter;
@@ -111,13 +100,13 @@ int check_arguments(HV* options) {
 
 	/** Check Lexer **/
 	SV* lexer_value = value_from_hash(options, "lexer");
-	if(!SvPOK(lexer_value) && !(SvROK(lexer_value) && SvTYPE(lexer_value) == SVt_PVHV)) {
+	if(!SvPOK(lexer_value) && !(SvROK(lexer_value) && SvTYPE(SvRV(lexer_value)) == SVt_PVHV)) {
 		logger("Lexer is neither a string nor a reference to a hash.\n");
 		return 0;
 	}
 
 	/** Check Formatter **/
-	SV* formatter_value = value_from_hash(options, "lexer");
+	SV* formatter_value = value_from_hash(options, "formatter");
 	if(!SvPOK(formatter_value) && !(SvROK(formatter_value) && SvTYPE(formatter_value) == SVt_PVHV)) {
 		logger("Formatter is neither a string nor a reference to a hash.\n");
 		return 0;

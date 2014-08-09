@@ -12,3 +12,5 @@ PyObject* get_function_from_module(PyObject*, char*);
 PyObject* create_py_tuple(int, ...);
 PyObject* create_py_dict(int, ...);
 PyObject* create_py_filehandle(char*, char*);
+PyObject* create_pyobject_from_sv(SV*);
+PyObject* interpret_py_string(PyObject*);
