@@ -104,3 +104,21 @@ PyObject* interpret_py_string(PyObject* string) {
 
 	return string;	
 }
+
+/** Returns the number of keys that matched **/
+int check_existence_of_hash_keys(HV* hash, int number_of_keys, ...) {
+	int keys_matched = 0; /** Zero keys matched **/
+	va_list ap;
+	va_start(ap, number_of_keys);
+
+	int i;
+	for(i = 0; i < number_of_keys; i++) {
+		char* key = va_arg(ap, char*);
+		if((int) hv_exists_ent(hash, newSVpvn(key, strlen(key)), 0) != 0) {
+			keys_matched++;
+		}	
+	}
+	va_end(ap);
+
+	return keys_matched;
+}

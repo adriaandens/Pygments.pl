@@ -102,6 +102,9 @@ int check_arguments(HV* options) {
 	if(!SvPOK(lexer_value) && !(SvROK(lexer_value) && SvTYPE(SvRV(lexer_value)) == SVt_PVHV)) {
 		logger("Lexer is neither a string nor a reference to a hash.\n");
 		return 0;
+	} else if(SvROK(lexer_value) && SvTYPE(SvRV(lexer_value)) == SVt_PVHV) {
+		if(check_existence_of_hash_keys((HV*) SvRV(lexer_value), 1, "type") == 0)
+			return 0;
 	}
 
 	/** Check Formatter **/
@@ -109,6 +112,9 @@ int check_arguments(HV* options) {
 	if(!SvPOK(formatter_value) && !(SvROK(formatter_value) && SvTYPE(SvRV(formatter_value)) == SVt_PVHV)) {
 		logger("Formatter is neither a string nor a reference to a hash.\n");
 		return 0;
+	} else if(SvROK(formatter_value) && SvTYPE(SvRV(formatter_value)) == SVt_PVHV) {
+		if(check_existence_of_hash_keys((HV*) SvRV(formatter_value), 1, "type") == 0)
+			return 0;
 	}
 
 	/** Check outfile **/
