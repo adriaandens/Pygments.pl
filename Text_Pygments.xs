@@ -37,7 +37,6 @@ SV* highlight(HV* options)
 
 		int error_number;
 		if((error_number = error_occured(code, lexer, formatter))) {
-			fprintf(stderr, "Error number: %d\n", error_number);
 			XSRETURN_IV(error_number);
 		}
 

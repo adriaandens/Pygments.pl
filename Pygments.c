@@ -28,8 +28,6 @@ PyObject* create_lexer(SV* lexer_options) {
 	PyObject* ftn_get_lexer_by_name = get_function_object(pyg_mod_lexers, "get_lexer_by_name");
 	if(SvTYPE(lexer_options) == SVt_PV) { /** We got a simple string **/
 		lexer = PyObject_CallFunction(ftn_get_lexer_by_name, "s", SvPV_nolen(lexer_options));
-		if(PyErr_Occurred()) 
-			PyErr_Print();
 	} else { /** We got a hash **/
 		PyObject* options = PyDict_New();
 		HV* lexer_options_hash = (HV*) SvRV(lexer_options);
@@ -48,6 +46,9 @@ PyObject* create_lexer(SV* lexer_options) {
 		/** Call function, get lexer by name with dict **/
 		PyObject* args = create_py_tuple(1, Py_BuildValue("s", lexer_type));
 		lexer = PyObject_Call(ftn_get_lexer_by_name, args, options);
+	}
+	if(PyErr_Occurred()) {
+		PyErr_Clear(); /** We don't care, lexer will be NULL anyway **/
 	}
 
 	return lexer;
@@ -76,6 +77,9 @@ PyObject* create_formatter(SV* formatter_options) {
 		/** Call function, get lexer by name with dict **/
 		PyObject* args = create_py_tuple(1, Py_BuildValue("s", formatter_type));
 		formatter = PyObject_Call(ftn_get_formatter_by_name, args, options);
+	}
+	if(PyErr_Occurred()) {
+		PyErr_Clear(); /** We don't care, formatter will be NULL anyway **/
 	}
 
 	return formatter;
