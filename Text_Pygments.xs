@@ -35,12 +35,23 @@ SV* highlight(HV* options)
 		if(valid_arguments == 2)
 			outfile = create_py_string_from_pl_string(value_from_hash(options, "outfile"));
 
+		int error_number;
+		if((error_number = error_occured(code, lexer, formatter))) {
+			fprintf(stderr, "Error number: %d\n", error_number);
+			XSRETURN_IV(error_number);
+		}
+
 		/** Call highlight() in Python **/
 		PyObject* pyg_ftn_highlight = PyObject_GetAttrString(pyg_mod_pygments, "highlight");
 		PyObject* py_formatted_code = PyObject_CallFunctionObjArgs(pyg_ftn_highlight, code, lexer, formatter, NULL);
 		if(valid_arguments == 2) {
 			FILE* fp;
 			fp = fopen(PyBytes_AsString(outfile), "w");
+			
+			/** Error checking **/
+			if(fp == NULL)
+				XSRETURN_IV(-50);
+
 			fprintf(fp, "%s", PyBytes_AsString(py_formatted_code));
 			fclose(fp);
 			RETVAL = newSViv(1);
