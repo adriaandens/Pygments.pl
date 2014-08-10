@@ -14,6 +14,8 @@ Helper.c
 Pygments.c
 Logger.c
 
+docs/returnvalues.md
+
 t/00_highlight_args_checking.t
 t/01_pygments.t
 
