@@ -62,12 +62,7 @@ PyObject* create_py_dict(int number_of_pairs, ...) {
 		PyObject* val = va_arg(ag, PyObject*);
 		val = interpret_py_string(val);
 
-		int success = PyDict_SetItemString(dict, key, val);
-		if(success == 0) {
-			logger("Successfully added "); logger(key);logger(" to dict.\n"); 
-		} else if(success == -1) {
-			logger("Failed to add ");logger(key);logger(" to dict.\n");
-		}
+		PyDict_SetItemString(dict, key, val);
 	}
 	va_end(ag);
 
@@ -92,14 +87,11 @@ PyObject* create_pyobject_from_sv(SV* sv) {
 
 PyObject* interpret_py_string(PyObject* string) {
 	if(strcmp("true", PyBytes_AsString(string)) == 0) {
-		logger("Value equals to true\n");
 		string = Py_True;
 	} else if(strcmp("false", PyBytes_AsString(string)) == 0) {
 		string = Py_False;
-		logger("Value equals to false\n");
 	} else if(strcmp("none", PyBytes_AsString(string)) == 0) {
 		string = Py_None;
-		logger("Value equals to none\n");
 	}
 
 	return string;	
