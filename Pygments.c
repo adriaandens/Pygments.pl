@@ -5,8 +5,7 @@ PyObject *pyg_mod_pygments, *pyg_mod_formatters, *pyg_mod_lexers, *pyg_mod_style
 
 int initialize_python_and_pygments_modules() {
 	if(Py_IsInitialized()) {
-		logger("Python has already been initialized.\n");
-		return 1;
+		return 0;
 	}
 
 	Py_Initialize();
@@ -15,12 +14,11 @@ int initialize_python_and_pygments_modules() {
 	pyg_mod_lexers = PyImport_ImportModule("pygments.lexers");
 	pyg_mod_styles = PyImport_ImportModule("pygments.styles");
 	if(pyg_mod_pygments == NULL || pyg_mod_formatters == NULL || pyg_mod_lexers == NULL || pyg_mod_styles == NULL) {
-		logger("One of the modules could not be imported successfully.\n");
-		return 0;
+		return -1;
 	}
 
 	/** Success! **/
-	return 1;
+	return 0;
 }
 
 PyObject* create_lexer(SV* lexer_options) {
@@ -85,59 +83,51 @@ PyObject* create_formatter(SV* formatter_options) {
 	return formatter;
 }
 
-/** Return zero if it's not a good hash, return 1 if it is and there is no outfile, return 2 if it's also a valid hash and there's an outfile **/
+/** Return a negative value (see docs) on fail, and 0 or more (see docs) on success. **/
 int check_arguments(HV* options) {
-	int return_code = 1;
+	int return_code = 0;
 
 	/** Check if code, lexer and formatter keys exists **/
 	if((int) hv_exists_ent(options, newSVpvs("code"), 0) == 0 ||
 	   (int) hv_exists_ent(options, newSVpvs("lexer"), 0) == 0 ||
 	   (int) hv_exists_ent(options, newSVpvs("formatter"), 0) == 0) {
-		logger("A key (code, lexer or formatter) was not found in the hash.\n");
-		return 0; /** One of those does not exist **/
+		return -1; /** One of those does not exist **/
 	}
 
 
 	/** Check code **/
 	SV* code_value = value_from_hash(options, "code");
 	if(!SvPOK(code_value) && !(SvROK(code_value) && SvTYPE(SvRV(code_value)) == SVt_PV)) {
-		logger("Code is neither a string, nor a reference to a string.\n");
-		return 0; /** Not a string or a reference to a string **/
+		return -1; /** Not a string or a reference to a string **/
 	}	
 
 	/** Check Lexer **/
 	SV* lexer_value = value_from_hash(options, "lexer");
 	if(!SvPOK(lexer_value) && !(SvROK(lexer_value) && SvTYPE(SvRV(lexer_value)) == SVt_PVHV)) {
-		logger("Lexer is neither a string nor a reference to a hash.\n");
-		return 0;
+		return -1;
 	} else if(SvROK(lexer_value) && SvTYPE(SvRV(lexer_value)) == SVt_PVHV) {
 		if(check_existence_of_hash_keys((HV*) SvRV(lexer_value), 1, "type") == 0)
-			return 0;
+			return -1;
 	}
 
 	/** Check Formatter **/
 	SV* formatter_value = value_from_hash(options, "formatter");
 	if(!SvPOK(formatter_value) && !(SvROK(formatter_value) && SvTYPE(SvRV(formatter_value)) == SVt_PVHV)) {
-		logger("Formatter is neither a string nor a reference to a hash.\n");
-		return 0;
+		return -1;
 	} else if(SvROK(formatter_value) && SvTYPE(SvRV(formatter_value)) == SVt_PVHV) {
 		if(check_existence_of_hash_keys((HV*) SvRV(formatter_value), 1, "type") == 0)
-			return 0;
+			return -1;
 	}
 
 	/** Check outfile **/
 	if((int) hv_exists_ent(options, newSVpvs("outfile"), 0) != 0) {
-		logger("There is a key called outfile.\n");
 		SV* outfile = value_from_hash(options, "outfile");
 		if(!SvPOK(outfile) && !(SvROK(outfile) && SvTYPE(SvRV(outfile)) == SVt_PV)) {
-			logger("And the key is not a valid one...\n");
-			return 0;
+			return -1;
 		} else {
-			logger("The value of outfile is a string or a reference to one.\n");
-			return_code = 2;
+			return_code = 1;
 		}
 	}
-	logger("Everything seems ok in check_arguments().\n");
 
 	/** Everything OK! **/
 	return return_code;

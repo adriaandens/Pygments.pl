@@ -12,17 +12,17 @@ SV* highlight(HV* options)
 		logger("Starting log...\n");
 
 		int valid_arguments = check_arguments(options);
-		if(!valid_arguments) {
+		if(valid_arguments < 0) {
 			logger("Did not pass valid arguments checker.\n");
-			XSRETURN_UNDEF;
+			XSRETURN_IV(-10);
 		}
 
 		logger("Passed the valid arguments checker.\n");
 
 		int result = initialize_python_and_pygments_modules();
-		if(result == 0) {
+		if(result < 0) {
 			logger("Failed to initialize Python and/or import the Pygments modules.\n");
-			XSRETURN_UNDEF;
+			XSRETURN_IV(-1);
 		}
 
 		logger("Initialized Python and imported modules.\n");
@@ -32,7 +32,7 @@ SV* highlight(HV* options)
 		code = create_py_string_from_pl_string(value_from_hash(options, "code"));
 		lexer = create_lexer(value_from_hash(options, "lexer"));
 		formatter = create_formatter(value_from_hash(options, "formatter"));
-		if(valid_arguments == 2)
+		if(valid_arguments == 1)
 			outfile = create_py_string_from_pl_string(value_from_hash(options, "outfile"));
 
 		int error_number;
@@ -43,7 +43,7 @@ SV* highlight(HV* options)
 		/** Call highlight() in Python **/
 		PyObject* pyg_ftn_highlight = PyObject_GetAttrString(pyg_mod_pygments, "highlight");
 		PyObject* py_formatted_code = PyObject_CallFunctionObjArgs(pyg_ftn_highlight, code, lexer, formatter, NULL);
-		if(valid_arguments == 2) {
+		if(valid_arguments == 1) {
 			FILE* fp;
 			fp = fopen(PyBytes_AsString(outfile), "w");
 			
